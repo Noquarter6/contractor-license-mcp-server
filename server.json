@@ -1,0 +1,42 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Noquarter6/contractor-license-mcp-server",
+  "title": "Contractor License Verification (TradesAPI)",
+  "description": "Verify US contractor licenses in 45 states — status, expiration, disciplinary history.",
+  "version": "0.6.2",
+  "websiteUrl": "https://www.tradesapi.com",
+  "repository": {
+    "url": "https://github.com/Noquarter6/Contractor-License-Verification",
+    "source": "github",
+    "subfolder": "mcp-server"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "contractor-license-mcp-server",
+      "version": "0.6.2",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CLV_API_URL",
+          "description": "TradesAPI backend URL. Use https://www.tradesapi.com unless you have a reason to override.",
+          "isRequired": true,
+          "isSecret": false,
+          "default": "https://www.tradesapi.com",
+          "format": "string"
+        },
+        {
+          "name": "CLV_API_KEY",
+          "description": "Your TradesAPI key. Get one free at https://www.tradesapi.com (50 credits, no credit card).",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

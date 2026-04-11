@@ -1,0 +1,54 @@
+{
+  "name": "contractor-license-mcp-server",
+  "version": "0.6.2",
+  "description": "Real-time contractor license verification across 45 US states. MCP server for Claude Desktop and other AI agents — verify license status, expiration, and disciplinary history directly against state licensing board portals.",
+  "mcpName": "io.github.Noquarter6/contractor-license-mcp-server",
+  "type": "module",
+  "bin": {
+    "contractor-license-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "contractor",
+    "license",
+    "verification",
+    "claude",
+    "ai-agent",
+    "state-licensing"
+  ],
+  "author": "Jack Underwood",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Noquarter6/contractor-license-mcp-server.git"
+  },
+  "homepage": "https://github.com/Noquarter6/contractor-license-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/Noquarter6/contractor-license-mcp-server/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "axios": "^1.7.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}
