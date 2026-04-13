@@ -164,8 +164,8 @@ Each license verification consumes **1 credit**, whether the result is fresh or 
 ## Development
 
 ```bash
-git clone https://github.com/jackunderwood/Contractor-License-Verification.git
-cd Contractor-License-Verification/mcp-server
+git clone https://github.com/Noquarter6/contractor-license-mcp-server.git
+cd contractor-license-mcp-server
 npm install
 npm run build
 npm test

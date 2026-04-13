@@ -3,8 +3,6 @@ import type { StatesInputSchema } from "../schemas.js";
 import { formatStatesList } from "../format.js";
 import type { StateInfo } from "../types.js";
 
-// Hardcoded until backend exposes a /states endpoint.
-// Last updated: 2026-03-27 — 43 working states.
 const SUPPORTED_STATES: StateInfo[] = [
   { code: "AK", name: "Alaska", portal: "https://www.commerce.alaska.gov/", status: "healthy", trades: ["general", "electrical", "mechanical"] },
   { code: "AL", name: "Alabama", portal: "https://genconbd.alabama.gov/", status: "healthy", trades: ["general", "electrical", "plumbing", "hvac", "residential"] },

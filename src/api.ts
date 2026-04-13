@@ -19,7 +19,7 @@ export class ApiClient {
     this.http = axios.create({
       baseURL,
       headers: { "X-API-Key": apiKey },
-      timeout: 120_000, // Scrapers can be slow (Playwright + portal load)
+      timeout: 120_000, // Portal lookups can be slow
     });
   }
 
@@ -28,7 +28,6 @@ export class ApiClient {
     licenseNumber: string,
     trade: string
   ): Promise<LicenseResult> {
-    // TODO: Add force_refresh param once backend supports cache bypass
     try {
       const { data } = await this.http.get<LicenseResult>("/verify", {
         params: { state, license: licenseNumber, trade },

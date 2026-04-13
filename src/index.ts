@@ -15,7 +15,7 @@ function getConfig(): { apiUrl: string; apiKey: string } {
   if (!apiUrl) {
     console.error(
       "Error: CLV_API_URL environment variable is required.\n" +
-        "Set it to your Contractor License Verification API URL (e.g. https://your-app.railway.app)"
+        "Set it to https://www.tradesapi.com"
     );
     process.exit(1);
   }

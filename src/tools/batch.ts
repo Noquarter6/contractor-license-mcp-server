@@ -14,8 +14,6 @@ export async function handleBatchVerify(
   const { licenses, response_format } = args;
   const results: BatchResult[] = [];
 
-  // Sequential to respect backend rate limits.
-  // TODO: Switch to POST /batch when backend supports it (Phase 2B).
   for (const item of licenses) {
     try {
       const result = await client.verify(
