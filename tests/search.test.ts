@@ -34,7 +34,10 @@ const sampleSearchResponse: SearchResponse = {
 function mockClient(overrides: Partial<ApiClient> = {}): ApiClient {
   return {
     verify: vi.fn(),
-    search: vi.fn().mockResolvedValue(sampleSearchResponse),
+    search: vi.fn().mockResolvedValue({
+      data: sampleSearchResponse,
+      credits: { remaining: 48, charged: 2 },
+    }),
     health: vi.fn(),
     ...overrides,
   } as any;
@@ -113,7 +116,10 @@ describe("handleSearchByName", () => {
       checked_at: "2026-03-26T00:00:00Z",
     };
     const client = mockClient({
-      search: vi.fn().mockResolvedValue(emptyResponse),
+      search: vi.fn().mockResolvedValue({
+        data: emptyResponse,
+        credits: { remaining: 48, charged: 2 },
+      }),
     });
     const result = await handleSearchByName(client, {
       state: "TX",

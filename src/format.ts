@@ -1,4 +1,19 @@
-import type { LicenseResult, StateInfo, BatchResponse, SearchResponse } from "./types.js";
+import type { LicenseResult, StateInfo, BatchResponse, SearchResponse, CreditInfo } from "./types.js";
+
+function normalizeStatus(status: string | null): string {
+  if (!status) return "N/A";
+  const s = status.toLowerCase();
+  if (s === "not_found" || s === "not found") return "Not Found";
+  if (s === "unknown") return "Unknown (lookup may have failed)";
+  return status;
+}
+
+export function formatCredits(credits: CreditInfo): string {
+  const parts: string[] = [];
+  if (credits.charged != null) parts.push(`Credits used: ${credits.charged}`);
+  if (credits.remaining != null) parts.push(`Credits remaining: ${credits.remaining}`);
+  return parts.length > 0 ? `\n\n---\n${parts.join(" | ")}` : "";
+}
 
 export function formatLicenseResult(
   result: LicenseResult,
@@ -18,7 +33,7 @@ export function formatLicenseResult(
     `| License # | ${result.license_number} |`,
     `| State | ${result.state} |`,
     `| Trade | ${result.trade} |`,
-    `| Status | ${result.status ?? "N/A"} |`,
+    `| Status | ${normalizeStatus(result.status)} |`,
     `| Expiration | ${result.expiration ?? "N/A"} |`,
     `| Source | ${result.source_url ?? "N/A"} |`,
     `| Cached | ${result.cached ? "Yes" : "No"} |`,
@@ -28,7 +43,13 @@ export function formatLicenseResult(
   if (result.disciplinary_actions.length > 0) {
     lines.push("", "### Disciplinary Actions");
     for (const action of result.disciplinary_actions) {
-      lines.push(`- ${action}`);
+      if (typeof action === "string") {
+        lines.push(`- ${action}`);
+      } else if (action && typeof action === "object" && "description" in action) {
+        lines.push(`- ${(action as { description: string }).description}`);
+      } else {
+        lines.push(`- ${JSON.stringify(action)}`);
+      }
     }
   }
 
@@ -87,7 +108,7 @@ export function formatBatchResponse(
       );
       lines.push(item.result.valid ? "**VALID**" : "**INVALID**");
       if (item.result.name) lines.push(`Name: ${item.result.name}`);
-      if (item.result.status) lines.push(`Status: ${item.result.status}`);
+      if (item.result.status) lines.push(`Status: ${normalizeStatus(item.result.status)}`);
       lines.push("");
     } else {
       lines.push(`### ${i + 1}. ERROR`);

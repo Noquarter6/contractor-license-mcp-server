@@ -6,7 +6,7 @@ export interface LicenseResult {
   expiration: string | null;
   status: string | null;
   state: string;
-  disciplinary_actions: string[];
+  disciplinary_actions: (string | { description: string })[];
   source_url: string | null;
   cached: boolean;
   checked_at: string;
@@ -52,4 +52,9 @@ export interface SearchResponse {
   results: SearchResultItem[];
   cached: boolean;
   checked_at: string;
+}
+
+export interface CreditInfo {
+  remaining: number | null;
+  charged: number | null;
 }

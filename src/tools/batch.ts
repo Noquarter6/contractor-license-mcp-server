@@ -1,8 +1,8 @@
 import type { z } from "zod";
 import type { ApiClient } from "../api.js";
 import type { BatchInputSchema } from "../schemas.js";
-import { formatBatchResponse } from "../format.js";
-import type { BatchResponse, BatchResult } from "../types.js";
+import { formatBatchResponse, formatCredits } from "../format.js";
+import type { BatchResponse, BatchResult, CreditInfo } from "../types.js";
 import { CHARACTER_LIMIT } from "../constants.js";
 
 type BatchInput = z.output<typeof BatchInputSchema>;
@@ -13,15 +13,19 @@ export async function handleBatchVerify(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   const { licenses, response_format } = args;
   const results: BatchResult[] = [];
+  let lastCredits: CreditInfo = { remaining: null, charged: null };
+  let totalCharged = 0;
 
   for (const item of licenses) {
     try {
-      const result = await client.verify(
+      const { data, credits } = await client.verify(
         item.state,
         item.license_number,
         item.trade
       );
-      results.push({ result, error: null });
+      results.push({ result: data, error: null });
+      if (credits.charged != null) totalCharged += credits.charged;
+      lastCredits = credits;
     } catch (err: any) {
       results.push({ result: null, error: err.message ?? "Unknown error" });
     }
@@ -37,7 +41,13 @@ export async function handleBatchVerify(
     results,
   };
 
-  let text = formatBatchResponse(batch, response_format);
+  const batchCredits: CreditInfo = {
+    remaining: lastCredits.remaining,
+    charged: totalCharged > 0 ? totalCharged : null,
+  };
+
+  const creditSuffix = response_format === "markdown" ? formatCredits(batchCredits) : "";
+  let text = formatBatchResponse(batch, response_format) + creditSuffix;
   if (text.length > CHARACTER_LIMIT) {
     text =
       text.slice(0, CHARACTER_LIMIT) +

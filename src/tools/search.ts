@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { ApiClient } from "../api.js";
 import type { SearchInputSchema } from "../schemas.js";
-import { formatSearchResults } from "../format.js";
+import { formatSearchResults, formatCredits } from "../format.js";
 import { CHARACTER_LIMIT } from "../constants.js";
 
 type SearchInput = z.output<typeof SearchInputSchema>;
@@ -13,8 +13,9 @@ export async function handleSearchByName(
   const { state, name, trade, limit, response_format } = args;
 
   try {
-    const response = await client.search(state, name, trade, limit);
-    let text = formatSearchResults(response, response_format);
+    const { data, credits } = await client.search(state, name, trade, limit);
+    const creditSuffix = response_format === "markdown" ? formatCredits(credits) : "";
+    let text = formatSearchResults(data, response_format) + creditSuffix;
     if (text.length > CHARACTER_LIMIT) {
       text =
         text.slice(0, CHARACTER_LIMIT) +

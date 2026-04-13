@@ -1,6 +1,6 @@
 {
   "name": "contractor-license-mcp-server",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Real-time contractor license verification across 45 US states. MCP server for Claude Desktop and other AI agents — verify license status, expiration, and disciplinary history directly against state licensing board portals.",
   "mcpName": "io.github.Noquarter6/contractor-license-mcp-server",
   "type": "module",

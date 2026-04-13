@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import type { LicenseResult, SearchResponse } from "./types.js";
+import type { LicenseResult, SearchResponse, CreditInfo } from "./types.js";
 
 export class ApiError extends Error {
   constructor(
@@ -27,12 +27,12 @@ export class ApiClient {
     state: string,
     licenseNumber: string,
     trade: string
-  ): Promise<LicenseResult> {
+  ): Promise<{ data: LicenseResult; credits: CreditInfo }> {
     try {
-      const { data } = await this.http.get<LicenseResult>("/verify", {
+      const resp = await this.http.get<LicenseResult>("/verify", {
         params: { state, license: licenseNumber, trade },
       });
-      return data;
+      return { data: resp.data, credits: this.parseCredits(resp.headers) };
     } catch (err: any) {
       throw this.wrapError(err);
     }
@@ -43,12 +43,12 @@ export class ApiClient {
     name: string,
     trade: string,
     limit: number
-  ): Promise<SearchResponse> {
+  ): Promise<{ data: SearchResponse; credits: CreditInfo }> {
     try {
-      const { data } = await this.http.get<SearchResponse>("/search", {
+      const resp = await this.http.get<SearchResponse>("/search", {
         params: { state, name, trade, limit },
       });
-      return data;
+      return { data: resp.data, credits: this.parseCredits(resp.headers) };
     } catch (err: any) {
       throw this.wrapError(err);
     }
@@ -63,6 +63,15 @@ export class ApiClient {
     }
   }
 
+  private parseCredits(headers: any): CreditInfo {
+    const remaining = headers?.["x-credits-remaining"];
+    const charged = headers?.["x-credits-charged"];
+    return {
+      remaining: remaining != null ? parseInt(remaining, 10) : null,
+      charged: charged != null ? parseInt(charged, 10) : null,
+    };
+  }
+
   private wrapError(err: any): ApiError {
     if (err.isAxiosError && err.response) {
       const { status, data, headers } = err.response;
@@ -70,7 +79,7 @@ export class ApiClient {
 
       if (status === 401) {
         return new ApiError(
-          "Authentication failed — check your CLV_API_KEY environment variable",
+          "Authentication failed — check your CLV_API_KEY environment variable. Get a key at https://www.tradesapi.com",
           401
         );
       }
@@ -87,7 +96,7 @@ export class ApiClient {
       }
       if (status === 502) {
         return new ApiError(
-          "Verification temporarily unavailable. Try again in a few minutes.",
+          `Verification temporarily unavailable — the state portal may be down. Try again in a few minutes.`,
           502
         );
       }

@@ -26,13 +26,15 @@ describe("ApiClient", () => {
         cached: false,
         checked_at: "2026-03-22T00:00:00Z",
       },
+      headers: { "x-credits-remaining": "49", "x-credits-charged": "1" },
     });
 
     const result = await client.verify("TX", "12345", "general");
     expect(mockGet).toHaveBeenCalledWith("/verify", {
       params: { state: "TX", license: "12345", trade: "general" },
     });
-    expect(result.valid).toBe(true);
+    expect(result.data.valid).toBe(true);
+    expect(result.credits).toBeDefined();
   });
 
   it("calls /health", async () => {

@@ -3,7 +3,7 @@
   "name": "io.github.Noquarter6/contractor-license-mcp-server",
   "title": "Contractor License Verification (TradesAPI)",
   "description": "Verify US contractor licenses in 45 states — status, expiration, disciplinary history.",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "websiteUrl": "https://www.tradesapi.com",
   "repository": {
     "url": "https://github.com/Noquarter6/contractor-license-mcp-server",
@@ -14,7 +14,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "contractor-license-mcp-server",
-      "version": "0.6.4",
+      "version": "0.6.5",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

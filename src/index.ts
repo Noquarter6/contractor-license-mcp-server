@@ -36,7 +36,7 @@ async function main() {
 
   const server = new McpServer({
     name: "contractor-license-verification",
-    version: "0.6.3",
+    version: "0.6.5",
   });
 
   server.registerTool(
