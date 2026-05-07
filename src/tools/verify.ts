@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { ApiClient } from "../api.js";
 import type { VerifyInputSchema } from "../schemas.js";
-import { formatLicenseResult, formatCredits } from "../format.js";
+import { formatLicenseResult } from "../format.js";
 
 type VerifyInput = z.output<typeof VerifyInputSchema>;
 
@@ -9,14 +9,14 @@ export async function handleVerify(
   client: ApiClient,
   args: VerifyInput
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
-  const { state, license_number, trade, response_format } = args;
+  const { state, city, license_number, trade, force_refresh, response_format } = args;
 
   try {
-    const { data, credits } = await client.verify(state, license_number, trade);
-    const creditSuffix = response_format === "markdown" ? formatCredits(credits) : "";
-    const text = formatLicenseResult(data, response_format) + creditSuffix;
+    const result = await client.verify(state, license_number, trade, city, force_refresh);
     return {
-      content: [{ type: "text", text }],
+      content: [
+        { type: "text", text: formatLicenseResult(result, response_format) },
+      ],
     };
   } catch (err: any) {
     return {

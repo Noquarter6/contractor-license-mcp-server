@@ -34,10 +34,7 @@ const sampleSearchResponse: SearchResponse = {
 function mockClient(overrides: Partial<ApiClient> = {}): ApiClient {
   return {
     verify: vi.fn(),
-    search: vi.fn().mockResolvedValue({
-      data: sampleSearchResponse,
-      credits: { remaining: 48, charged: 2 },
-    }),
+    search: vi.fn().mockResolvedValue(sampleSearchResponse),
     health: vi.fn(),
     ...overrides,
   } as any;
@@ -57,7 +54,7 @@ describe("handleSearchByName", () => {
     expect(result.content[0].text).toContain("Anderson");
     expect(result.content[0].text).toContain("ANDERSON, ORIN RAE");
     expect(result.content[0].text).toContain("2 results found");
-    expect(client.search).toHaveBeenCalledWith("TX", "Anderson", "general", 20);
+    expect(client.search).toHaveBeenCalledWith("TX", "Anderson", "general", 20, undefined);
   });
 
   it("returns json when requested", async () => {
@@ -116,10 +113,7 @@ describe("handleSearchByName", () => {
       checked_at: "2026-03-26T00:00:00Z",
     };
     const client = mockClient({
-      search: vi.fn().mockResolvedValue({
-        data: emptyResponse,
-        credits: { remaining: 48, charged: 2 },
-      }),
+      search: vi.fn().mockResolvedValue(emptyResponse),
     });
     const result = await handleSearchByName(client, {
       state: "TX",

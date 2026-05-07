@@ -1,19 +1,4 @@
-import type { LicenseResult, StateInfo, BatchResponse, SearchResponse, CreditInfo } from "./types.js";
-
-function normalizeStatus(status: string | null): string {
-  if (!status) return "N/A";
-  const s = status.toLowerCase();
-  if (s === "not_found" || s === "not found") return "Not Found";
-  if (s === "unknown") return "Unknown (lookup may have failed)";
-  return status;
-}
-
-export function formatCredits(credits: CreditInfo): string {
-  const parts: string[] = [];
-  if (credits.charged != null) parts.push(`Credits used: ${credits.charged}`);
-  if (credits.remaining != null) parts.push(`Credits remaining: ${credits.remaining}`);
-  return parts.length > 0 ? `\n\n---\n${parts.join(" | ")}` : "";
-}
+import type { LicenseResult, StateInfo, BatchResponse, SearchResponse } from "./types.js";
 
 export function formatLicenseResult(
   result: LicenseResult,
@@ -33,7 +18,7 @@ export function formatLicenseResult(
     `| License # | ${result.license_number} |`,
     `| State | ${result.state} |`,
     `| Trade | ${result.trade} |`,
-    `| Status | ${normalizeStatus(result.status)} |`,
+    `| Status | ${result.status ?? "N/A"} |`,
     `| Expiration | ${result.expiration ?? "N/A"} |`,
     `| Source | ${result.source_url ?? "N/A"} |`,
     `| Cached | ${result.cached ? "Yes" : "No"} |`,
@@ -43,44 +28,73 @@ export function formatLicenseResult(
   if (result.disciplinary_actions.length > 0) {
     lines.push("", "### Disciplinary Actions");
     for (const action of result.disciplinary_actions) {
-      if (typeof action === "string") {
-        lines.push(`- ${action}`);
-      } else if (action && typeof action === "object" && "description" in action) {
-        lines.push(`- ${(action as { description: string }).description}`);
-      } else {
-        lines.push(`- ${JSON.stringify(action)}`);
-      }
+      lines.push(`- ${action}`);
     }
   }
 
   return lines.join("\n");
 }
 
+function statusIcon(status: StateInfo["status"]): string {
+  switch (status) {
+    case "healthy":
+      return "OK";
+    case "degraded":
+      return "DEGRADED";
+    case "maintenance":
+      return "MAINTENANCE";
+    default:
+      return "DOWN";
+  }
+}
+
 export function formatStatesList(
   states: StateInfo[],
   format: "markdown" | "json"
 ): string {
+  const allMunis = states.flatMap((s) => s.municipalities ?? []);
+
   if (format === "json") {
-    return JSON.stringify({ states, total: states.length }, null, 2);
+    return JSON.stringify(
+      {
+        total_states: states.length,
+        total_municipalities: allMunis.length,
+        states,
+      },
+      null,
+      2
+    );
   }
 
+  const header =
+    allMunis.length > 0
+      ? `## Supported Jurisdictions (${states.length} states + ${allMunis.length} cities)`
+      : `## Supported States (${states.length} states)`;
+
   const lines = [
-    `## Supported States (${states.length} states)`,
+    header,
+    "",
+    "### States",
     "",
     "| State | Name | Status | Trades |",
     "|-------|------|--------|--------|",
   ];
 
   for (const s of states) {
-    const statusIcon =
-      s.status === "healthy"
-        ? "OK"
-        : s.status === "degraded"
-          ? "DEGRADED"
-          : "DOWN";
     lines.push(
-      `| ${s.code} | ${s.name} | ${statusIcon} | ${s.trades.join(", ")} |`
+      `| ${s.code} | ${s.name} | ${statusIcon(s.status)} | ${s.trades.join(", ")} |`
     );
+  }
+
+  if (allMunis.length > 0) {
+    lines.push("", "### Cities (municipal scrapers)", "");
+    lines.push("| Code | City | Parent State | Status | Trades |");
+    lines.push("|------|------|--------------|--------|--------|");
+    for (const m of allMunis) {
+      lines.push(
+        `| ${m.code} | ${m.city} | ${m.parent_state} | ${statusIcon(m.status)} | ${m.trades.join(", ")} |`
+      );
+    }
   }
 
   return lines.join("\n");
@@ -108,7 +122,7 @@ export function formatBatchResponse(
       );
       lines.push(item.result.valid ? "**VALID**" : "**INVALID**");
       if (item.result.name) lines.push(`Name: ${item.result.name}`);
-      if (item.result.status) lines.push(`Status: ${normalizeStatus(item.result.status)}`);
+      if (item.result.status) lines.push(`Status: ${item.result.status}`);
       lines.push("");
     } else {
       lines.push(`### ${i + 1}. ERROR`);

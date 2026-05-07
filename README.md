@@ -1,12 +1,12 @@
 # contractor-license-mcp-server
 
-**Real-time contractor license verification across 45 US states.** An [MCP server](https://modelcontextprotocol.io) that lets Claude Desktop, Cursor, and any MCP-compatible AI agent verify a contractor's license, status, expiration, and disciplinary history directly against state licensing board portals.
+**Real-time contractor license verification across all 50 US states + DC, plus 8 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville).** An [MCP server](https://modelcontextprotocol.io) that lets Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP-compatible AI agent verify a contractor's license, status, expiration, and disciplinary history directly against licensing board portals.
 
 Send `{state, license_number, trade}` — get back validity, licensee name, expiration date, status, and any disciplinary actions on file. Results are fetched live from official state portals (no stale nightly exports) and cached for 24 hours when active.
 
 ## Why this server
 
-- **45 states** covered via official state licensing board portals, not third-party data aggregators
+- **All 50 US states + DC + 8 major cities** covered via official licensing board portals, not third-party data aggregators
 - **Live lookups** — each verification hits the authoritative portal, so expirations and disciplinary actions are as fresh as the board's own data
 - **Batch verification** — up to 25 licenses per call, run in parallel
 - **Disciplinary history** — returned when the portal exposes it
@@ -14,12 +14,32 @@ Send `{state, license_number, trade}` — get back validity, licensee name, expi
 
 ## Quick start
 
-### Claude Desktop
+### Hosted (recommended)
 
-Add this to your Claude Desktop config:
+No install required. Add this to your Claude Desktop config:
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "tradesapi": {
+      "type": "streamable-http",
+      "url": "https://www.tradesapi.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+Replace `YOUR_API_KEY` with the key from your dashboard and restart Claude Desktop.
+
+### Local install (alternative)
+
+If you prefer to run the MCP server locally via stdio:
 
 ```json
 {
@@ -54,15 +74,16 @@ npm install -g contractor-license-mcp-server
 
 ## Tools
 
-### `clv_verify_license`
+### `verify_license`
 
-Verify a single contractor license against a state licensing board portal.
+Verify a single contractor license against the official state (or city) licensing portal.
 
 | Parameter | Required | Description |
 |---|---|---|
 | `state` | yes | Two-letter state code (`CA`, `TX`, `FL`, ...) |
+| `city` | no | Optional city slug to target a municipal portal: `chicago`, `nyc`, `philadelphia`, `detroit`, `atlanta`, `dallas`, `lasvegas`, `nashville`. Lowercase, no spaces. |
 | `license_number` | yes | The license number to verify |
-| `trade` | no | `general`, `electrical`, `plumbing`, `hvac`, `mechanical`, `residential`, or `home_inspection` (defaults to `general`) |
+| `trade` | no | `general`, `electrical`, `plumbing`, `hvac`, `mechanical`, `roofing`, `residential`, ... (defaults to `general`) |
 | `force_refresh` | no | Bypass the 24h cache and re-fetch from the portal |
 | `response_format` | no | `markdown` (default) or `json` |
 
@@ -81,74 +102,45 @@ Verify a single contractor license against a state licensing board portal.
 | Expiration | 05/12/2026               |
 ```
 
-### `clv_batch_verify`
+### `batch_verify`
 
-Verify up to 25 licenses in a single call. Each verification runs independently — partial failures do not block the batch.
-
-| Parameter | Required | Description |
-|---|---|---|
-| `licenses` | yes | Array of `{ state, license_number, trade }` objects (1–25 items) |
-| `response_format` | no | `markdown` (default) or `json` |
-
-### `clv_list_supported_states`
-
-List all supported states, including portal URLs and available trades. Use this to see which states and trades you can query.
+Verify up to 25 licenses in a single call. Each verification runs independently — partial failures do not block the batch. Per-item `city` is supported.
 
 | Parameter | Required | Description |
 |---|---|---|
+| `licenses` | yes | Array of `{ state, city?, license_number, trade }` objects (1–25 items) |
 | `response_format` | no | `markdown` (default) or `json` |
 
-## Supported states
+### `search_by_name`
 
-| Code | State | Trades |
+Fuzzy-match contractors by business or individual name within a single state (or city) database. Costs 2 credits per call.
+
+| Parameter | Required | Description |
 |---|---|---|
-| AK | Alaska | general, electrical, mechanical |
-| AL | Alabama | general, electrical, plumbing, hvac, residential |
-| AR | Arkansas | general |
-| AZ | Arizona | general, electrical, plumbing, hvac |
-| CA | California | general, electrical, plumbing, hvac |
-| CO | Colorado | electrical, plumbing |
-| CT | Connecticut | general, electrical, plumbing, hvac |
-| DC | District of Columbia | general |
-| DE | Delaware | electrical, plumbing, hvac |
-| FL | Florida | general, electrical, plumbing, hvac |
-| GA | Georgia | general |
-| HI | Hawaii | general |
-| IA | Iowa | electrical |
-| ID | Idaho | electrical, plumbing, hvac |
-| IL | Illinois | general, electrical, plumbing, hvac |
-| IN | Indiana | plumbing |
-| KY | Kentucky | general, electrical, hvac, plumbing |
-| LA | Louisiana | general |
-| MA | Massachusetts | general, mechanical |
-| MD | Maryland | general, hvac, electrical, plumbing |
-| ME | Maine | electrical, plumbing |
-| MI | Michigan | electrical, plumbing, hvac |
-| MN | Minnesota | general, electrical, plumbing |
-| MS | Mississippi | general |
-| NC | North Carolina | general |
-| ND | North Dakota | general, electrical |
-| NE | Nebraska | general, electrical |
-| NH | New Hampshire | electrical, plumbing |
-| NJ | New Jersey | general, electrical, hvac, plumbing |
-| NM | New Mexico | general, electrical, plumbing, hvac |
-| NV | Nevada | general, electrical, plumbing, hvac |
-| NY | New York | home_inspection |
-| OH | Ohio | general, electrical, plumbing, hvac |
-| OK | Oklahoma | electrical, plumbing, hvac |
-| OR | Oregon | general |
-| PA | Pennsylvania | general, electrical, hvac, plumbing |
-| RI | Rhode Island | general |
-| SC | South Carolina | general, electrical, plumbing, hvac |
-| TN | Tennessee | general, electrical, plumbing |
-| TX | Texas | hvac, electrical, plumbing |
-| UT | Utah | general, electrical, plumbing, hvac |
-| VA | Virginia | general, electrical, plumbing, hvac |
-| VT | Vermont | electrical, plumbing |
-| WA | Washington | general |
-| WV | West Virginia | general, electrical, hvac, plumbing |
+| `state` | yes | Two-letter state code |
+| `city` | no | Optional city slug for municipal databases |
+| `name` | yes | Business or individual name (case-insensitive, partial-match tolerant) |
+| `trade` | no | Trade filter |
+| `limit` | no | Max results (1–50, default 20) |
+| `response_format` | no | `markdown` (default) or `json` |
 
-Coverage expands continuously. Run `clv_list_supported_states` from your agent for the current list, or see the live state grid at [www.tradesapi.com](https://www.tradesapi.com).
+Not every state portal supports name search — call `list_supported_states` and check `supports_name_search` per jurisdiction first.
+
+### `list_supported_states`
+
+List every supported jurisdiction with portal URLs, current health, available trades, and registered municipal scrapers nested under each state. Use this to discover what's reachable before constructing other tool calls.
+
+| Parameter | Required | Description |
+|---|---|---|
+| `response_format` | no | `markdown` (default) or `json` |
+
+## Coverage
+
+All 50 US states + DC at the state level, plus 8 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville).
+
+Run `list_supported_states` from your agent for the live, fetched-fresh-each-call list of supported jurisdictions, available trades per jurisdiction, current portal health, and which states support name search. The MCP package no longer bundles a static state table — what comes back from `list_supported_states` is always current with prod.
+
+You can also see the live state grid at [www.tradesapi.com](https://www.tradesapi.com).
 
 ## Configuration
 
@@ -164,8 +156,8 @@ Each license verification consumes **1 credit**, whether the result is fresh or 
 ## Development
 
 ```bash
-git clone https://github.com/Noquarter6/contractor-license-mcp-server.git
-cd contractor-license-mcp-server
+git clone https://github.com/jackunderwood/Contractor-License-Verification.git
+cd Contractor-License-Verification/mcp-server
 npm install
 npm run build
 npm test

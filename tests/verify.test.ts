@@ -5,20 +5,17 @@ import type { ApiClient } from "../src/api.js";
 function mockClient(overrides: Partial<ApiClient> = {}): ApiClient {
   return {
     verify: vi.fn().mockResolvedValue({
-      data: {
-        valid: true,
-        name: "TEST USER",
-        license_number: "12345",
-        trade: "general",
-        expiration: "12/31/2026",
-        status: "Active",
-        state: "TX",
-        disciplinary_actions: [],
-        source_url: "https://example.com",
-        cached: false,
-        checked_at: "2026-03-22T00:00:00Z",
-      },
-      credits: { remaining: 49, charged: 1 },
+      valid: true,
+      name: "TEST USER",
+      license_number: "12345",
+      trade: "general",
+      expiration: "12/31/2026",
+      status: "Active",
+      state: "TX",
+      disciplinary_actions: [],
+      source_url: "https://example.com",
+      cached: false,
+      checked_at: "2026-03-22T00:00:00Z",
     }),
     health: vi.fn(),
     ...overrides,
@@ -37,7 +34,19 @@ describe("handleVerify", () => {
     });
     expect(result.content[0].type).toBe("text");
     expect((result.content[0] as any).text).toContain("TEST USER");
-    expect(client.verify).toHaveBeenCalledWith("TX", "12345", "general");
+    expect(client.verify).toHaveBeenCalledWith("TX", "12345", "general", undefined, false);
+  });
+
+  it("forwards force_refresh to ApiClient.verify", async () => {
+    const client = mockClient();
+    await handleVerify(client, {
+      state: "TX",
+      license_number: "12345",
+      trade: "general",
+      force_refresh: true,
+      response_format: "markdown",
+    });
+    expect(client.verify).toHaveBeenCalledWith("TX", "12345", "general", undefined, true);
   });
 
   it("returns json when requested", async () => {

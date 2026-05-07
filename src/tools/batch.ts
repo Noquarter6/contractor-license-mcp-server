@@ -1,8 +1,7 @@
 import type { z } from "zod";
 import type { ApiClient } from "../api.js";
 import type { BatchInputSchema } from "../schemas.js";
-import { formatBatchResponse, formatCredits } from "../format.js";
-import type { BatchResponse, BatchResult, CreditInfo } from "../types.js";
+import { formatBatchResponse } from "../format.js";
 import { CHARACTER_LIMIT } from "../constants.js";
 
 type BatchInput = z.output<typeof BatchInputSchema>;
@@ -12,42 +11,25 @@ export async function handleBatchVerify(
   args: BatchInput
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   const { licenses, response_format } = args;
-  const results: BatchResult[] = [];
-  let lastCredits: CreditInfo = { remaining: null, charged: null };
-  let totalCharged = 0;
 
-  for (const item of licenses) {
-    try {
-      const { data, credits } = await client.verify(
-        item.state,
-        item.license_number,
-        item.trade
-      );
-      results.push({ result: data, error: null });
-      if (credits.charged != null) totalCharged += credits.charged;
-      lastCredits = credits;
-    } catch (err: any) {
-      results.push({ result: null, error: err.message ?? "Unknown error" });
-    }
+  let batch;
+  try {
+    batch = await client.batch(
+      licenses.map((it) => ({
+        state: it.state,
+        city: it.city,
+        license: it.license_number,
+        trade: it.trade,
+      }))
+    );
+  } catch (err: any) {
+    return {
+      content: [{ type: "text", text: err.message ?? "Batch verification failed" }],
+      isError: true,
+    };
   }
 
-  const succeeded = results.filter((r) => r.result !== null).length;
-  const batch: BatchResponse = {
-    summary: {
-      total: licenses.length,
-      succeeded,
-      failed: licenses.length - succeeded,
-    },
-    results,
-  };
-
-  const batchCredits: CreditInfo = {
-    remaining: lastCredits.remaining,
-    charged: totalCharged > 0 ? totalCharged : null,
-  };
-
-  const creditSuffix = response_format === "markdown" ? formatCredits(batchCredits) : "";
-  let text = formatBatchResponse(batch, response_format) + creditSuffix;
+  let text = formatBatchResponse(batch, response_format);
   if (text.length > CHARACTER_LIMIT) {
     text =
       text.slice(0, CHARACTER_LIMIT) +

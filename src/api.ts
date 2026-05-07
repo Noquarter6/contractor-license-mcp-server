@@ -1,5 +1,12 @@
 import axios, { AxiosInstance } from "axios";
-import type { LicenseResult, SearchResponse, CreditInfo } from "./types.js";
+import type {
+  BackendBatchResponse,
+  BatchItem,
+  BatchResponse,
+  LicenseResult,
+  SearchResponse,
+  StatesApiResponse,
+} from "./types.js";
 
 export class ApiError extends Error {
   constructor(
@@ -15,24 +22,49 @@ export class ApiError extends Error {
 export class ApiClient {
   private http: AxiosInstance;
 
-  constructor(baseURL: string, apiKey: string) {
+  constructor(baseURL: string, apiKey: string, extraHeaders: Record<string, string> = {}) {
+    const headers: Record<string, string> = { ...extraHeaders };
+    if (apiKey) headers["X-API-Key"] = apiKey;
     this.http = axios.create({
       baseURL,
-      headers: { "X-API-Key": apiKey },
-      timeout: 120_000, // Portal lookups can be slow
+      headers,
+      timeout: 120_000,
     });
   }
 
   async verify(
     state: string,
     licenseNumber: string,
-    trade: string
-  ): Promise<{ data: LicenseResult; credits: CreditInfo }> {
+    trade: string,
+    city?: string,
+    forceRefresh?: boolean
+  ): Promise<LicenseResult> {
     try {
-      const resp = await this.http.get<LicenseResult>("/verify", {
-        params: { state, license: licenseNumber, trade },
-      });
-      return { data: resp.data, credits: this.parseCredits(resp.headers) };
+      const params: Record<string, string> = { state, license: licenseNumber, trade };
+      if (city) params.city = city;
+      if (forceRefresh) params.fresh = "true";
+      const { data } = await this.http.get<LicenseResult>("/verify", { params });
+      return data;
+    } catch (err: any) {
+      throw this.wrapError(err);
+    }
+  }
+
+  async batch(items: BatchItem[]): Promise<BatchResponse> {
+    try {
+      const body = {
+        licenses: items.map((it) => ({
+          state: it.state,
+          ...(it.city ? { city: it.city } : {}),
+          license: it.license,
+          trade: it.trade,
+        })),
+      };
+      const { data } = await this.http.post<BackendBatchResponse>("/batch", body);
+      return {
+        summary: { total: data.total, succeeded: data.succeeded, failed: data.failed },
+        results: data.results,
+      };
     } catch (err: any) {
       throw this.wrapError(err);
     }
@@ -42,13 +74,14 @@ export class ApiClient {
     state: string,
     name: string,
     trade: string,
-    limit: number
-  ): Promise<{ data: SearchResponse; credits: CreditInfo }> {
+    limit: number,
+    city?: string
+  ): Promise<SearchResponse> {
     try {
-      const resp = await this.http.get<SearchResponse>("/search", {
-        params: { state, name, trade, limit },
-      });
-      return { data: resp.data, credits: this.parseCredits(resp.headers) };
+      const params: Record<string, string | number> = { state, name, trade, limit };
+      if (city) params.city = city;
+      const { data } = await this.http.get<SearchResponse>("/search", { params });
+      return data;
     } catch (err: any) {
       throw this.wrapError(err);
     }
@@ -63,13 +96,13 @@ export class ApiClient {
     }
   }
 
-  private parseCredits(headers: any): CreditInfo {
-    const remaining = headers?.["x-credits-remaining"];
-    const charged = headers?.["x-credits-charged"];
-    return {
-      remaining: remaining != null ? parseInt(remaining, 10) : null,
-      charged: charged != null ? parseInt(charged, 10) : null,
-    };
+  async states(): Promise<StatesApiResponse> {
+    try {
+      const { data } = await this.http.get<StatesApiResponse>("/states");
+      return data;
+    } catch (err: any) {
+      throw this.wrapError(err);
+    }
   }
 
   private wrapError(err: any): ApiError {
@@ -79,7 +112,7 @@ export class ApiClient {
 
       if (status === 401) {
         return new ApiError(
-          "Authentication failed — check your CLV_API_KEY environment variable. Get a key at https://www.tradesapi.com",
+          "Authentication failed — check your CLV_API_KEY environment variable",
           401
         );
       }
@@ -96,7 +129,7 @@ export class ApiClient {
       }
       if (status === 502) {
         return new ApiError(
-          `Verification temporarily unavailable — the state portal may be down. Try again in a few minutes.`,
+          "Verification temporarily unavailable. Try again in a few minutes.",
           502
         );
       }

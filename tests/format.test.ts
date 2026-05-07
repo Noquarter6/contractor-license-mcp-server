@@ -49,6 +49,7 @@ describe("formatStatesList", () => {
     const json = formatStatesList(states, "json");
     const parsed = JSON.parse(json);
     expect(parsed.states).toHaveLength(2);
-    expect(parsed.total).toBe(2);
+    expect(parsed.total_states).toBe(2);
+    expect(parsed.total_municipalities).toBe(0);
   });
 });
