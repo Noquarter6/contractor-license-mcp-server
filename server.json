@@ -9,26 +9,22 @@
     "url": "https://github.com/Noquarter6/contractor-license-mcp-server",
     "source": "github"
   },
-  "packages": [
+  "remotes": [
     {
-      "registryType": "http",
+      "type": "streamable-http",
       "url": "https://www.tradesapi.com/mcp",
-      "transport": {
-        "type": "streamable-http"
-      },
-      "headers": {
-        "Authorization": "Bearer ${CLV_API_KEY}"
-      },
-      "environmentVariables": [
+      "headers": [
         {
-          "name": "CLV_API_KEY",
-          "description": "Your TradesAPI key. Get one free at https://www.tradesapi.com (50 credits, no credit card).",
+          "name": "Authorization",
+          "description": "Your TradesAPI key as a Bearer token. Get one free at https://www.tradesapi.com (50 credits, no credit card).",
           "isRequired": true,
           "isSecret": true,
           "format": "string"
         }
       ]
-    },
+    }
+  ],
+  "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
