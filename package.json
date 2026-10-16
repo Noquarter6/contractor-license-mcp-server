@@ -1,7 +1,7 @@
 {
   "name": "contractor-license-mcp-server",
   "version": "0.8.0",
-  "description": "Real-time contractor license verification across all 50 US states + DC plus 8 major-city portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville). MCP server for Claude Desktop, Claude Code, Cursor, Windsurf, and other AI agents — verify license status, expiration, and disciplinary history directly against licensing board portals.",
+  "description": "Real-time contractor license verification across all 50 US states + DC plus 16 major-city portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville, Jacksonville, Indianapolis, Denver, El Paso, Columbus, Los Angeles, Seattle, San Antonio). MCP server for Claude Desktop, Claude Code, Cursor, Windsurf, and other AI agents — verify license status, expiration, and disciplinary history directly against licensing board portals.",
   "mcpName": "io.github.Noquarter6/contractor-license-mcp-server",
   "type": "module",
   "bin": {
