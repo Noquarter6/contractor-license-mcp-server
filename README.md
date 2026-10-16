@@ -1,14 +1,14 @@
 # contractor-license-mcp-server
 
-**Real-time contractor license verification across all 50 US states + DC, plus 8 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville).** An [MCP server](https://modelcontextprotocol.io) that lets Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP-compatible AI agent verify a contractor's license, status, expiration, and disciplinary history directly against licensing board portals.
+**Real-time contractor license verification across all 50 US states + DC, plus 16 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville, Jacksonville, Indianapolis, Denver, El Paso, Columbus, Los Angeles, Seattle, San Antonio).** An [MCP server](https://modelcontextprotocol.io) that lets Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP-compatible AI agent verify a contractor's license, status, expiration, and disciplinary history directly against licensing board portals.
 
 Send `{state, license_number, trade}` — get back validity, licensee name, expiration date, status, and any disciplinary actions on file. Results are fetched live from official state portals (no stale nightly exports) and cached for 24 hours when active.
 
 ## Why this server
 
-- **All 50 US states + DC + 8 major cities** covered via official licensing board portals, not third-party data aggregators
+- **All 50 US states + DC + 16 major cities** covered via official licensing board portals, not third-party data aggregators
 - **Live lookups** — each verification hits the authoritative portal, so expirations and disciplinary actions are as fresh as the board's own data
-- **Batch verification** — up to 25 licenses per call, run in parallel
+- **Batch verification** — up to 50 licenses per call, run in parallel
 - **Disciplinary history** — returned when the portal exposes it
 - Backed by [TradesAPI](https://www.tradesapi.com), a hosted HTTP API you can also hit directly
 
@@ -81,7 +81,7 @@ Verify a single contractor license against the official state (or city) licensin
 | Parameter | Required | Description |
 |---|---|---|
 | `state` | yes | Two-letter state code (`CA`, `TX`, `FL`, ...) |
-| `city` | no | Optional city slug to target a municipal portal: `chicago`, `nyc`, `philadelphia`, `detroit`, `atlanta`, `dallas`, `lasvegas`, `nashville`. Lowercase, no spaces. |
+| `city` | no | Optional city slug to target a municipal portal: `chicago`, `nyc`, `philadelphia`, `detroit`, `atlanta`, `dallas`, `lasvegas`, `nashville`, `jacksonville`, `indianapolis`, `denver`, `elpaso`, `columbus`, `losangeles`, `seattle`, `sanantonio`. Lowercase, no spaces. |
 | `license_number` | yes | The license number to verify |
 | `trade` | no | `general`, `electrical`, `plumbing`, `hvac`, `mechanical`, `roofing`, `residential`, ... (defaults to `general`) |
 | `force_refresh` | no | Bypass the 24h cache and re-fetch from the portal |
@@ -104,11 +104,11 @@ Verify a single contractor license against the official state (or city) licensin
 
 ### `batch_verify`
 
-Verify up to 25 licenses in a single call. Each verification runs independently — partial failures do not block the batch. Per-item `city` is supported.
+Verify up to 50 licenses in a single call. Each verification runs independently — partial failures do not block the batch. Per-item `city` is supported.
 
 | Parameter | Required | Description |
 |---|---|---|
-| `licenses` | yes | Array of `{ state, city?, license_number, trade }` objects (1–25 items) |
+| `licenses` | yes | Array of `{ state, city?, license_number, trade }` objects (1–50 items) |
 | `response_format` | no | `markdown` (default) or `json` |
 
 ### `search_by_name`
@@ -136,7 +136,7 @@ List every supported jurisdiction with portal URLs, current health, available tr
 
 ## Coverage
 
-All 50 US states + DC at the state level, plus 8 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville).
+All 50 US states + DC at the state level, plus 16 major-city contractor licensing portals (Chicago, NYC, Philadelphia, Detroit, Atlanta, Dallas, Las Vegas, Nashville, Jacksonville, Indianapolis, Denver, El Paso, Columbus, Los Angeles, Seattle, San Antonio).
 
 Run `list_supported_states` from your agent for the live, fetched-fresh-each-call list of supported jurisdictions, available trades per jurisdiction, current portal health, and which states support name search. The MCP package no longer bundles a static state table — what comes back from `list_supported_states` is always current with prod.
 
@@ -151,7 +151,7 @@ You can also see the live state grid at [www.tradesapi.com](https://www.tradesap
 
 ## Credits
 
-Each license verification consumes **1 credit**, whether the result is fresh or cached. New accounts receive **50 free credits**. Additional credit packs can be purchased from the dashboard at [www.tradesapi.com](https://www.tradesapi.com).
+Each license verification consumes **1 credit**, whether the result comes from cache or a live lookup. A forced live re-check (`force_refresh: true`) costs **2 credits**. New accounts receive **50 free credits**. Additional credit packs can be purchased from the dashboard at [www.tradesapi.com](https://www.tradesapi.com).
 
 ## Development
 
